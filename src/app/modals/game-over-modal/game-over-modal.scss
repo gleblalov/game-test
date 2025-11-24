@@ -1,0 +1,17 @@
+@use '../../styles/mixins/modals' as *;
+
+.game-over-modal {
+  @include modal-wrapper();
+
+  &-title {
+    margin-bottom: 15px;
+  }
+
+  &-score {
+    margin-bottom: 10px;
+  }
+
+  &-button {
+    cursor: pointer;
+  }
+}

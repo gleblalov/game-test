@@ -1,0 +1,14 @@
+<div class="header">
+    <div class="header-item header-item--column">
+        <div class="header-score">Score: {{ gameService.score() }}</div>
+        <div class="header-timer">Time: {{ gameService.timeRemaining() }}</div>
+    </div>
+    <div class="header-item">
+        @if (gameService.isPaused()) {
+            <img class="header-icon" src="/assets/icons/play.png" alt="play" (click)="onResumeGame()">
+        } @else {
+            <img class="header-icon" src="/assets/icons/pause.png" alt="pause" (click)="onPauseGame()">
+        }
+        <img class="header-icon" src="/assets/icons/settings.png" alt="settings" (click)="onShowSettingsModal()">
+    </div>
+</div>
