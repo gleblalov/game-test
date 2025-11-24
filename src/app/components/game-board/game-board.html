@@ -1,0 +1,30 @@
+<div #board class="board">
+    <app-header></app-header>
+    @for (obj of gameService.fallingObjects(); track obj.id) {
+        <div
+            class="falling-object"
+            [style.left.px]="obj.x"
+            [style.top.px]="obj.y"
+            [style.width.px]="obj.size"
+            [style.height.px]="obj.size"
+        ></div>
+    }
+
+    <div
+        #player
+        class="player"
+        [style.left.px]="gameService.playerX()"
+        [style.bottom.px]="0"
+    ></div>
+
+    @if (modalsService.isShowGameOverModal()) {
+        <app-game-over-modal
+           [score]="gameService.score()"
+           (newGameEvent)="startNewGame()"
+        ></app-game-over-modal>
+    }
+
+    @if (modalsService.isShowSettingsModal()) {
+        <app-settings-modal></app-settings-modal>
+    }
+</div>

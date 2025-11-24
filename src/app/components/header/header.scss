@@ -1,0 +1,32 @@
+.header {
+  position: absolute;
+  top: 10px;
+  z-index: 5;
+  padding: 0 5px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+
+  &-item {
+    display: flex;
+    gap: 5px;
+
+    &--column {
+      flex-direction: column;
+    }
+  }
+
+  &-score {
+    font-weight: bold;
+  }
+
+  &-timer {
+    font-weight: bold;
+  }
+
+  &-icon {
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,55 @@
+<div class="settings-modal">
+    <form [formGroup]="settingsForm" class="settings-form">
+        <div class="settings-form-input">
+            <label>
+                Falling Speed:
+                <input formControlName="fallingSpeed" />
+            </label>
+            @if (settingsForm.get('fallingSpeed')?.invalid && settingsForm.get('fallingSpeed')?.dirty) {
+                <span class="error" >
+                    Must be a number between 1 and 5
+                </span>
+            }
+        </div>
+
+        <div class="settings-form-input">
+            <label>
+                Falling Frequency (ms):
+                <input formControlName="fallingFrequency" />
+                @if (settingsForm.get('fallingFrequency')?.invalid && settingsForm.get('fallingFrequency')?.dirty) {
+                    <span class="error" >
+                    Must be a number between 100 and 3000 ms
+                </span>
+                }
+            </label>
+        </div>
+
+        <div class="settings-form-input">
+            <label>
+                Player Speed:
+                <input formControlName="playerSpeed" />
+                @if (settingsForm.get('playerSpeed')?.invalid && settingsForm.get('playerSpeed')?.dirty) {
+                    <span class="error" >
+                    Must be a number between 1 and 10
+                </span>
+                }
+            </label>
+        </div>
+
+        <div class="settings-form-input">
+            <label>
+                Game Time (seconds):
+                <input formControlName="gameTime" />
+                @if (settingsForm.get('gameTime')?.invalid && settingsForm.get('gameTime')?.dirty) {
+                    <span class="error" >
+                    Must be a number >= 5sec
+                </span>
+                }
+            </label>
+        </div>
+
+        <button type="button" [disabled]="settingsForm.invalid" (click)="onClick()">
+            {{ buttonText() }}
+        </button>
+    </form>
+</div>

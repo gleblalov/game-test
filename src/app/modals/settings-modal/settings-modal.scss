@@ -1,0 +1,37 @@
+@use '../../styles/mixins/modals' as *;
+
+.settings-modal {
+  @include modal-wrapper();
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .settings-form-input {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  label {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    input {
+      width: 80px;
+    }
+  }
+
+  button {
+    margin-top: 10px;
+    padding: 5px 10px;
+  }
+
+  .error {
+    display: block;
+    color: red;
+    font-size: 14px;
+  }
+}
