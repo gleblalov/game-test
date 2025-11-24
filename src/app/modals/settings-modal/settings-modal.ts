@@ -1,9 +1,10 @@
 import {Component, computed, effect, inject, OnInit, Signal, signal} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {GameService} from "../../services/game/game-service";
-import {ModalsService} from "../../services/modals/modals-service";
 import { toSignal } from '@angular/core/rxjs-interop';
 import {debounceTime, filter, map, skip} from "rxjs";
+
+import {GameService} from "../../services/game/game-service";
+import {ModalsService} from "../../services/modals/modals-service";
 
 interface GameSettingsForm {
   fallingSpeed: number;
@@ -58,12 +59,14 @@ export class SettingsModal implements OnInit {
   });
 
   public initialGameTime = signal<null | number>(null);
+
   public gameTimeChanged = computed(() => {
-    const value = this.formValue()?.gameTime;
+    const value = Number(this.formValue().gameTime);
     const initial = this.initialGameTime();
 
     return value !== initial;
   });
+
   public buttonText = computed(() => {
     const isPaused = this.gameService.isPaused();
     const timeChanged = this.gameTimeChanged();
@@ -74,7 +77,7 @@ export class SettingsModal implements OnInit {
     return 'New game';
   });
 
-  public formValue: Signal<GameSettingsForm | null> = toSignal(
+  public formValue: Signal<GameSettingsForm> = toSignal(
       this.settingsForm.valueChanges.pipe(
           debounceTime(400),
           filter(() => this.settingsForm.valid),

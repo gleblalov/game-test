@@ -1,7 +1,8 @@
 import {Component, OnInit, AfterViewInit, inject, ViewChild, ElementRef} from '@angular/core';
-import {GameService} from "../../services/game/game-service";
 import {GameOverModal} from "../../modals/game-over-modal/game-over-modal";
 import {Header} from "../header/header";
+
+import {GameService} from "../../services/game/game-service";
 import {ModalsService} from "../../services/modals/modals-service";
 import {SettingsModal} from "../../modals/settings-modal/settings-modal";
 import {LayoutService} from "../../services/layout/layout-service";

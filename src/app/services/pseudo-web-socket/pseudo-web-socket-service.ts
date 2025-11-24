@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {BehaviorSubject, filter, map, Observable, Subject} from "rxjs";
-import { ESocketEvent, SocketEvents, SocketData } from '../../interfaces/game-send';
+
+import { SocketEvents, SocketData } from '../../interfaces/game-send';
 
 @Injectable({
   providedIn: 'root',

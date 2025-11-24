@@ -5,7 +5,7 @@ import {Subject, takeUntil, timer} from "rxjs";
   providedIn: 'root',
 })
 export class GameTimerService {
-  private _timeRemaining: WritableSignal<number> = signal(0);
+  private _timeRemaining: WritableSignal<number> = signal(1);
   private destroy$ = new Subject<void>();
 
   public get timeRemaining(): Signal<number> { return this._timeRemaining; }

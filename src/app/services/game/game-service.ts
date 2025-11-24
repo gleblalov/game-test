@@ -1,12 +1,14 @@
 import {inject, Injectable, Signal, signal, WritableSignal} from '@angular/core';
-import {EGameStartMode, FallingObject, GameSettings} from "../../interfaces/game";
 import {animationFrames, Subject, takeUntil, timer, withLatestFrom} from "rxjs";
+
 import {GameSendService} from "../game-send/game-send-service";
-import {ESocketEvent, SocketEvents} from "../../interfaces/game-send";
 import {KeyboardEventService} from "../keyboard-event/keyboard-event-service";
 import {FallingObjectsService} from "./falling-objects-service";
 import {PlayerControlService} from "./player-control-service";
 import {GameTimerService} from "./game-timer-service";
+
+import {ESocketEvent, SocketEvents} from "../../interfaces/game-send";
+import {EGameStartMode, FallingObject, GameSettings} from "../../interfaces/game";
 
 @Injectable({
   providedIn: 'root',
@@ -70,7 +72,7 @@ export class GameService {
     this._startProcessingGame(EGameStartMode.NEW)
   }
 
-  public endGame() {
+  public endGame = () => {
     this._fallingObjectsService.reset();
     this._unsubscribeEndOrPause();
   }
@@ -97,12 +99,12 @@ export class GameService {
     this._gameSendService.getEvent(ESocketEvent.GAME_STATE)
         .pipe(takeUntil(this.destroy$))
         .subscribe(data => {
-          // console.log('SERVER → CLIENT [gameState]:', data);
+          console.log('SERVER → CLIENT [gameState]:', data);
         });
     this._gameSendService.getEvent(ESocketEvent.OBJECT_CAUGHT)
         .pipe(takeUntil(this.destroy$))
         .subscribe(data => {
-          // console.log('SERVER → CLIENT [objectCaught]:', data);
+          console.log('SERVER → CLIENT [objectCaught]:', data);
         });
     
     this._initListeningKeys();
