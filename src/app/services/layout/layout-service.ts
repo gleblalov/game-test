@@ -1,14 +1,10 @@
 import {ElementRef, Injectable, Signal, signal, WritableSignal} from '@angular/core';
-
-interface ISize {
-  width: number;
-  height: number;
-}
+import {ISize, LayoutProvider} from "./layout-provider";
 
 @Injectable({
   providedIn: 'root',
 })
-export class LayoutService {
+export class LayoutService extends LayoutProvider {
   private _boardSize: WritableSignal<ISize> = signal({ width: 400, height: 400 });
   private _playerSize: WritableSignal<ISize> = signal({ width: 40, height: 20 });
   private _objectSize: WritableSignal<number> = signal(20);

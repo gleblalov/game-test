@@ -4,7 +4,9 @@ import {animationFrames, Subject, takeUntil, timer, withLatestFrom} from "rxjs";
 import {GameSendService} from "../game-send/game-send-service";
 import {ESocketEvent, SocketEvents} from "../../interfaces/game-send";
 import {KeyboardEventService} from "../keyboard-event/keyboard-event-service";
-import {LayoutService} from "../layout/layout-service";
+import {FallingObjectsService} from "./falling-objects-service";
+import {PlayerControlService} from "./player-control-service";
+import {GameTimerService} from "./game-timer-service";
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +14,9 @@ import {LayoutService} from "../layout/layout-service";
 export class GameService {
   private _gameSendService = inject(GameSendService);
   private _keyboardEventService = inject(KeyboardEventService);
-  private _layoutService = inject(LayoutService);
+  private _fallingObjectsService = inject(FallingObjectsService);
+  private _playerControlService = inject(PlayerControlService);
+  private _gameTimerService = inject(GameTimerService);
 
   private _settings: WritableSignal<GameSettings> = signal<GameSettings>({
     fallingSpeed: 3,
@@ -21,31 +25,26 @@ export class GameService {
     gameTime: 30
   });
 
-  private readonly _playerX: WritableSignal<number> = signal(180);
   private readonly _score: WritableSignal<number> = signal(0);
-  private readonly _fallingObjects: WritableSignal<FallingObject[]> = signal<FallingObject[]>([]);
-  private readonly _timeRemaining: WritableSignal<number> = signal(this._settings().gameTime);
   private _isPaused: WritableSignal<boolean> = signal(false);
   private _isGameProcessing: WritableSignal<boolean> = signal(false);
 
   private destroy$ = new Subject<void>();
 
-  private objectIdCounter = 0;
-
-  public get playerX(): Signal<number> {
-    return this._playerX;
-  }
-
   public get score(): Signal<number> {
     return this._score;
   }
 
+  public get playerX(): Signal<number> {
+    return this._playerControlService.playerX;
+  }
+
   public get fallingObjects(): Signal<FallingObject[]> {
-    return this._fallingObjects;
+    return this._fallingObjectsService.fallingObjects;
   }
 
   public get timeRemaining(): Signal<number> {
-    return this._timeRemaining;
+    return this._gameTimerService.timeRemaining;
   }
 
   public get isPaused(): Signal<boolean> {
@@ -61,7 +60,6 @@ export class GameService {
   }
 
   public updateSettings(settings: Partial<GameSettings>) {
-    console.log('updateSettings')
     this._settings.update(prev => ({ ...prev, ...settings }));
   }
 
@@ -73,7 +71,7 @@ export class GameService {
   }
 
   public endGame() {
-    this._fallingObjects.set([]);
+    this._fallingObjectsService.reset();
     this._unsubscribeEndOrPause();
   }
 
@@ -90,57 +88,6 @@ export class GameService {
       this._isGameProcessing.set(true);
       this._startProcessingGame(EGameStartMode.RESUME)
     }
-  }
-
-  movePlayer(direction: 'left' | 'right') {
-    if (this._isPaused()) return;
-
-    this._playerX.update(x => {
-      const nextX = direction === 'left' ? x - this._settings().playerSpeed : x + this._settings().playerSpeed;
-      // board width limit, for example 0-400px
-      const endBoard = this._layoutService.boardSize().width - this._layoutService.playerSize().width;
-      return Math.max(0, Math.min(endBoard, nextX));
-    });
-  }
-
-  private spawnObject() {
-    const endBoard = this._layoutService.boardSize().width - this._layoutService.objectSize(); // board width limit so that the object does not go beyond the border
-    const newObj: FallingObject = {
-      id: this.objectIdCounter++,
-      x: Math.random() * endBoard,
-      y: 0,
-      size: 20
-    };
-    this._fallingObjects.update(arr => [...arr, newObj]);
-  }
-
-  private moveObjects() {
-    this._fallingObjects.update(arr =>
-        arr.map(obj => ({ ...obj, y: obj.y + this._settings().fallingSpeed }))
-    );
-  }
-
-  private checkCollisions() {
-    const playerX = this._playerX();
-    const playerWidth = this._layoutService.playerSize().width; // width of player rectangle
-    const playerY =  this._layoutService.boardSize().height - this._layoutService.playerSize().height; // fixed bottom position
-
-    const caughtObjects = this._fallingObjects().filter(obj =>
-        obj.y + obj.size >= playerY &&
-        obj.x + obj.size >= playerX &&
-        obj.x <= playerX + playerWidth
-    );
-
-    if (caughtObjects.length) {
-      this._score.update(s => s + caughtObjects.length);
-      this._fallingObjects.update(arr => arr.filter(obj => !caughtObjects.includes(obj)));
-      this._gameSendService.sendObjectCaught(() => this.getDataForSend(ESocketEvent.OBJECT_CAUGHT));
-    }
-
-    // remove objects that went off-screen
-    this._fallingObjects.update(
-        arr => arr.filter(obj => obj.y <= this._layoutService.boardSize().height)
-    );
   }
 
   private _startProcessingGame(type: EGameStartMode) {
@@ -164,32 +111,28 @@ export class GameService {
     timer(0, this._settings().fallingFrequency)
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
-      this.spawnObject();
+      this._fallingObjectsService.spawnFallingObjects();
     });
 
     // move objects down ~60fps
     animationFrames()
         .pipe(takeUntil(this.destroy$))
         .subscribe(() => {
-      this.moveObjects();
-      this.checkCollisions();
+      this._fallingObjectsService.moveFallingObjects(this._settings().fallingSpeed);
+      const caughtObjects = this._fallingObjectsService.checkCollisions();
+
+      if (caughtObjects) {
+          this._score.update(s => s + caughtObjects);
+          this._gameSendService.sendObjectCaught(() => this.getDataForSend(ESocketEvent.OBJECT_CAUGHT));
+      }
     });
 
     // game timer
     if (type === EGameStartMode.NEW) {
-      this._timeRemaining.set(this._settings().gameTime);
+      this._gameTimerService.stopTimer();
+      this._gameTimerService.setTimeRemaining(this._settings().gameTime);
     }
-    timer(0, 1000)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(() => {
-      this._timeRemaining.update(time => {
-        if (time <= 1) {
-          this.endGame();
-          return 0;
-        }
-        return time - 1;
-      });
-    });
+    this._gameTimerService.startTimer(this.endGame);
   }
 
   private _initListeningKeys() {
@@ -199,20 +142,27 @@ export class GameService {
             takeUntil(this.destroy$)
         )
         .subscribe(([_, key]) => {
-          if (key === 'ArrowLeft') this.movePlayer('left');
-          if (key === 'ArrowRight') this.movePlayer('right');
+          if (key === 'ArrowLeft') this._movePlayer('left');
+          if (key === 'ArrowRight') this._movePlayer('right');
         });
+  }
+
+  private _movePlayer(direction: 'left' | 'right') {
+    if (this._isPaused()) return;
+
+    this._playerControlService.move(direction, this._settings().fallingSpeed);
   }
 
   private _resetGame() {
     this._score.set(0);
-    this._fallingObjects.set([]);
+    this._fallingObjectsService.reset();
   }
 
   private _unsubscribeEndOrPause() {
     this.destroy$.next();
     this.destroy$.complete();
 
+    this._gameTimerService.stopTimer();
     this._gameSendService.stopSendEvent();
   }
 
@@ -222,7 +172,7 @@ export class GameService {
       case 'gameState':
         return {
           caughtObjects: this._score(),
-          timeRemaining: this._timeRemaining(),
+          timeRemaining: this.timeRemaining(),
         } as SocketEvents[K];
       case 'objectCaught':
         return { caughtObjects: this._score() } as SocketEvents[K];

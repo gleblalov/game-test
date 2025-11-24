@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import {fromEvent, map, merge, Observable, shareReplay} from "rxjs";
+import {KeyboardProvider} from "./keyboard-provider";
 
 @Injectable({
   providedIn: 'root',
 })
-export class KeyboardEventService {
+export class KeyboardEventService extends KeyboardProvider {
   private keyState = new Set<string>();
 
   private _keyDown$ = fromEvent<KeyboardEvent>(window, 'keydown');

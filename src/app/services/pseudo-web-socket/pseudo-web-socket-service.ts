@@ -12,11 +12,13 @@ export class PseudoWebSocketService {
   /** open connection */
   public connect() {
     this.isConnected.next(true);
+    console.log('[PseudoWebSocket] connected');
   }
 
   /** close connection */
   public disconnect() {
     this.isConnected.next(false);
+    console.log('[PseudoWebSocket] disconnected');
   }
 
   /** CLIENT → SERVER */
